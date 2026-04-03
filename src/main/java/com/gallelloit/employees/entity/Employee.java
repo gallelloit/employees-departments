@@ -18,9 +18,10 @@ public class Employee {
 
     private String name;
 
+    @Column(nullable = false, unique = true)
     private String email;
 
     @ManyToOne
     @JoinColumn(name = "department_id")
-    private com.ejemplo.employees.entity.Department department;
+    private Department department;
 }
