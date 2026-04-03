@@ -1,6 +1,7 @@
 package com.gallelloit.employees.controller;
 
-import com.gallelloit.employees.entity.Employee;
+import com.gallelloit.employees.dto.EmployeeCreateRequest;
+import com.gallelloit.employees.dto.EmployeeDTO;
 import com.gallelloit.employees.service.EmployeeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,12 +17,12 @@ public class EmployeeController {
     private final EmployeeService service;
 
     @GetMapping
-    public ResponseEntity<List<Employee>> findAll() {
+    public ResponseEntity<List<EmployeeDTO>> findAll() {
         return ResponseEntity.ok(service.findAll());
     }
 
     @PostMapping
-    public ResponseEntity<Employee> save(@RequestBody Employee employee) {
-        return ResponseEntity.ok(service.save(employee));
+    public ResponseEntity<EmployeeDTO> save(@RequestBody EmployeeCreateRequest employeeRequest) {
+        return ResponseEntity.ok(service.create(employeeRequest));
     }
 }

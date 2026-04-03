@@ -1,5 +1,6 @@
 package com.gallelloit.employees.controller;
 
+import com.gallelloit.employees.dto.DepartmentDTO;
 import com.gallelloit.employees.entity.Department;
 import com.gallelloit.employees.service.DepartmentService;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +17,7 @@ public class DepartmentController {
     private final DepartmentService service;
 
     @GetMapping
-    public ResponseEntity<List<Department>> findAll() {
+    public ResponseEntity<List<DepartmentDTO>> findAll() {
         return ResponseEntity.ok(service.findAll());
     }
 

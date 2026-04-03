@@ -1,6 +1,8 @@
 package com.gallelloit.employees.service;
 
+import com.gallelloit.employees.dto.DepartmentDTO;
 import com.gallelloit.employees.entity.Department;
+import com.gallelloit.employees.mapper.DepartmentMapper;
 import com.gallelloit.employees.repository.DepartmentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -13,8 +15,9 @@ public class DepartmentService {
 
     private final DepartmentRepository repository;
 
-    public List<Department> findAll() {
-        return repository.findAll();
+    public List<DepartmentDTO> findAll() {
+
+        return repository.findAll().stream().map(DepartmentMapper::toDTO).toList();
     }
 
     public Department save(Department department) {
