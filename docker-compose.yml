@@ -1,0 +1,29 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: employees_postgres
+    environment:
+      POSTGRES_USER: employees
+      POSTGRES_PASSWORD: employees
+      POSTGRES_DB: employeesdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  employees-api:
+    build: .
+    container_name: employees_api
+    depends_on:
+      - postgres
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/employeesdb
+      SPRING_DATASOURCE_USERNAME: employees
+      SPRING_DATASOURCE_PASSWORD: employees
+    ports:
+      - "8080:8080"
+
+volumes:
+  postgres_data:
