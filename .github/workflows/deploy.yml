@@ -29,8 +29,10 @@ jobs:
         run: |
           docker buildx create --use || true
           docker buildx build \
-            --platform linux/amd64 \
-            -t employees-api .
+          --platform linux/amd64 \
+          -t employees-api \
+          --load \
+          .
 
       - name: Tag image
         run: |
