@@ -1,0 +1,50 @@
+name: Deploy to AWS
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-3
+
+      - name: Login to ECR
+        run: |
+          aws ecr get-login-password --region eu-west-3 | \
+          docker login --username AWS \
+          --password-stdin 922842442607.dkr.ecr.eu-west-3.amazonaws.com
+
+      - name: Build Docker image
+        run: |
+          docker buildx create --use || true
+          docker buildx build \
+            --platform linux/amd64 \
+            -t employees-api .
+
+      - name: Tag image
+        run: |
+          docker tag employees-api:latest \
+          922842442607.dkr.ecr.eu-west-3.amazonaws.com/employees-api:latest
+
+      - name: Push image
+        run: |
+          docker push \
+          922842442607.dkr.ecr.eu-west-3.amazonaws.com/employees-api:latest
+
+      - name: Force ECS deployment
+        run: |
+          aws ecs update-service \
+            --cluster employees-cdk-cluster \
+            --service employees-cdk-service \
+            --force-new-deployment
