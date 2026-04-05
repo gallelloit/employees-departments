@@ -19,7 +19,7 @@ jobs:
           distribution: 'corretto'
 
       - name: SonarCloud Scan
-        run: mvn sonar:sonar -Dsonar.projectKey=gallelloit_employees-departments -Dsonar.organization=gallelloit -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+        run: mvn clean verify sonar:sonar -Dsonar.projectKey=gallelloit_employees-departments -Dsonar.organization=gallelloit -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{ secrets.SONAR_TOKEN }}
 
       - name: Build & test
         run: mvn clean verify
