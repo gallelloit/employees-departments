@@ -44,9 +44,8 @@ jobs:
           docker push \
           922842442607.dkr.ecr.eu-west-3.amazonaws.com/employees-api:latest
 
-      - name: Force ECS deployment
+      - name: Deploy CDK
         run: |
-          aws ecs update-service \
-            --cluster employees-cdk-cluster \
-            --service employees-cdk-service \
-            --force-new-deployment
+          cd infra
+          npm install
+          npx cdk deploy --require-approval never
