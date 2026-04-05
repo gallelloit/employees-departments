@@ -2,8 +2,10 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
-import * as ecs_patterns from 'aws-cdk-lib/aws-ecs-patterns';
 import * as ecr from 'aws-cdk-lib/aws-ecr';
+import * as efs from 'aws-cdk-lib/aws-efs';
+import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
+import * as iam from 'aws-cdk-lib/aws-iam';
 
 export class InfraStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -14,10 +16,72 @@ export class InfraStack extends cdk.Stack {
             isDefault: true,
         });
 
-        // ECS Cluster
-        const cluster = new ecs.Cluster(this, 'EmployeesCluster', {
+        const fileSystem = new efs.FileSystem(this, 'EmployeesEfs', {
             vpc,
-            clusterName: 'employees-cdk-cluster',
+        });
+
+        const efsSecurityGroup = fileSystem.connections.securityGroups[0];
+
+        const taskDefinition = new ecs.FargateTaskDefinition(this, 'TaskDef', {
+            cpu: 512,
+            memoryLimitMiB: 1024,
+        });
+
+        const accessPoint = fileSystem.addAccessPoint('AccessPoint', {
+            path: '/data',
+            createAcl: {
+                ownerUid: '1000',
+                ownerGid: '1000',
+                permissions: '750',
+            },
+            posixUser: {
+                uid: '1000',
+                gid: '1000',
+            },
+        });
+
+        taskDefinition.addVolume({
+            name: 'postgres-data',
+            efsVolumeConfiguration: {
+                fileSystemId: fileSystem.fileSystemId,
+                authorizationConfig: {
+                    accessPointId: accessPoint.accessPointId,
+                    iam: 'ENABLED',
+                },
+                transitEncryption: 'ENABLED',
+            },
+        });
+
+        taskDefinition.addToTaskRolePolicy(new iam.PolicyStatement({
+            actions: [
+                'elasticfilesystem:ClientMount',
+                'elasticfilesystem:ClientWrite',
+                'elasticfilesystem:ClientRootAccess',
+            ],
+            resources: ['*'],
+        }));
+
+        const postgresContainer = taskDefinition.addContainer('Postgres', {
+            image: ecs.ContainerImage.fromRegistry('postgres:15'),
+            environment: {
+                POSTGRES_DB: 'employees',
+                POSTGRES_USER: 'user',
+                POSTGRES_PASSWORD: 'password',
+                PGDATA: '/var/lib/postgresql/data/pgdata',
+            },
+            logging: ecs.LogDrivers.awsLogs({ streamPrefix: 'postgres' }),
+
+            user: '1000:1000', // 🔥 CLAVE
+        });
+
+        postgresContainer.addPortMappings({
+            containerPort: 5432,
+        });
+
+        postgresContainer.addMountPoints({
+            containerPath: '/var/lib/postgresql/data',
+            sourceVolume: 'postgres-data',
+            readOnly: false,
         });
 
         // Existing ECR repository
@@ -27,45 +91,79 @@ export class InfraStack extends cdk.Stack {
             'employees-api'
         );
 
-        // Fargate Service with Load Balancer
-        const fargateService = new ecs_patterns.ApplicationLoadBalancedFargateService(
-            this,
-            'EmployeesService',
-            {
-                cluster,
-                cpu: 256,
-                memoryLimitMiB: 512,
-                desiredCount: 1,
-                publicLoadBalancer: true,
-                serviceName: 'employees-cdk-service',
+        const appContainer = taskDefinition.addContainer('App', {
+            image: ecs.ContainerImage.fromEcrRepository(repo, 'latest'),
+            logging: ecs.LogDrivers.awsLogs({ streamPrefix: 'app' }),
 
-                taskSubnets: {
-                    subnetType: ec2.SubnetType.PUBLIC,
-                },
+            environment: {
+                SPRING_DATASOURCE_URL: 'jdbc:postgresql://localhost:5432/employees',
+                SPRING_DATASOURCE_USERNAME: 'user',
+                SPRING_DATASOURCE_PASSWORD: 'password',
+            },
+        });
 
-                assignPublicIp: true,
+        appContainer.addPortMappings({
+            containerPort: 8080,
+        });
 
-                taskImageOptions: {
-                    image: ecs.ContainerImage.fromEcrRepository(repo, 'latest'),
-                    containerPort: 8080,
-                    enableLogging: true,
-                },
-            }
+        appContainer.addContainerDependencies({
+            container: postgresContainer,
+            condition: ecs.ContainerDependencyCondition.START,
+        });
+
+        // ECS Cluster
+        const cluster = new ecs.Cluster(this, 'EmployeesCluster', {
+            vpc,
+            clusterName: 'employees-cdk-cluster',
+        });
+
+        const fargateService = new ecs.FargateService(this, 'Service', {
+            cluster,
+            taskDefinition,
+            desiredCount: 1,
+            assignPublicIp: true,
+            vpcSubnets: {
+                subnetType: ec2.SubnetType.PUBLIC,
+            },
+        });
+
+        efsSecurityGroup.addIngressRule(
+            fargateService.connections.securityGroups[0],
+            ec2.Port.tcp(2049),
+            'Allow ECS to access EFS'
         );
 
-        fargateService.targetGroup.configureHealthCheck({
-            path: '/employees',
-            healthyHttpCodes: '200',
+
+        const lb = new elbv2.ApplicationLoadBalancer(this, 'LB', {
+            vpc,
+            internetFacing: true,
+        });
+
+        const listener = lb.addListener('Listener', {
+            port: 80,
+        });
+
+        listener.addTargets('ECS', {
+            port: 80,
+            targets: [
+                fargateService.loadBalancerTarget({
+                    containerName: 'App',
+                    containerPort: 8080,
+                }),
+            ],
+            healthCheck: {
+                path: '/employees',
+            },
         });
 
         // Allow outbound HTTPS to ECR
-        fargateService.service.connections.allowToAnyIpv4(
+        fargateService.connections.allowToAnyIpv4(
             ec2.Port.tcp(443),
             'Allow HTTPS outbound to ECR'
         );
 
         // Allow public HTTP traffic
-        fargateService.loadBalancer.connections.allowFromAnyIpv4(
+        lb.connections.allowFromAnyIpv4(
             ec2.Port.tcp(80),
             'Allow HTTP access'
         );
