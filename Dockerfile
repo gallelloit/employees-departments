@@ -6,7 +6,7 @@ COPY pom.xml .
 RUN mvn -B dependency:resolve
 
 COPY src ./src
-RUN mvn -B package -DskipTests
+RUN mvn -B package
 
 # 2. Runtime stage con Corretto
 FROM amazoncorretto:21
