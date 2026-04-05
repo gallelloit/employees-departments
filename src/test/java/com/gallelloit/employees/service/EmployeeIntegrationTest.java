@@ -23,7 +23,7 @@ class EmployeeIntegrationTest {
 
     @Container
     static PostgreSQLContainer<?> postgres =
-            new PostgreSQLContainer<>("postgres:15")
+            new PostgreSQLContainer<>("postgres:16")
                     .withDatabaseName("employees")
                     .withUsername("user")
                     .withPassword("password");
