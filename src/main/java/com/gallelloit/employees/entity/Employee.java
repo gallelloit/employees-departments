@@ -18,6 +18,8 @@ public class Employee {
 
     private String name;
 
+    private String lastNameg;
+
     @Column(nullable = false, unique = true)
     private String email;
 
