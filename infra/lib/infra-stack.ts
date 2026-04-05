@@ -91,8 +91,10 @@ export class InfraStack extends cdk.Stack {
             'employees-api'
         );
 
+        const imageTag = this.node.tryGetContext('imageTag') || 'latest';
+
         const appContainer = taskDefinition.addContainer('App', {
-            image: ecs.ContainerImage.fromEcrRepository(repo, 'latest'),
+            image: ecs.ContainerImage.fromEcrRepository(repo, imageTag),
             logging: ecs.LogDrivers.awsLogs({ streamPrefix: 'app' }),
 
             environment: {
