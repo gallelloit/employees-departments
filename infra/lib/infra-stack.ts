@@ -62,7 +62,7 @@ export class InfraStack extends cdk.Stack {
         }));
 
         const postgresContainer = taskDefinition.addContainer('Postgres', {
-            image: ecs.ContainerImage.fromRegistry('postgres:15'),
+            image: ecs.ContainerImage.fromRegistry('postgres:16'),
             environment: {
                 POSTGRES_DB: 'employees',
                 POSTGRES_USER: 'user',
@@ -70,7 +70,9 @@ export class InfraStack extends cdk.Stack {
                 PGDATA: '/var/lib/postgresql/data/pgdata',
             },
             logging: ecs.LogDrivers.awsLogs({ streamPrefix: 'postgres' }),
-
+            healthCheck: {
+                command: ['CMD-SHELL', 'pg_isready -U user'],
+            },
             user: '1000:1000', // 🔥 CLAVE
         });
 
@@ -110,7 +112,7 @@ export class InfraStack extends cdk.Stack {
 
         appContainer.addContainerDependencies({
             container: postgresContainer,
-            condition: ecs.ContainerDependencyCondition.START,
+            condition: ecs.ContainerDependencyCondition.HEALTHY,
         });
 
         // ECS Cluster
