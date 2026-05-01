@@ -129,6 +129,7 @@ export class InfraStack extends cdk.Stack {
             vpcSubnets: {
                 subnetType: ec2.SubnetType.PUBLIC,
             },
+            serviceName: 'employees-cdk-service',
         });
 
         efsSecurityGroup.addIngressRule(
