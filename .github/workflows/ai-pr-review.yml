@@ -1,0 +1,63 @@
+name: AI PR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  ai-review:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Generate PR diff
+        run: |
+          git fetch origin main
+          git diff origin/main...HEAD > pr.diff
+
+      - name: Call OpenAI API
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          DIFF_CONTENT=$(cat pr.diff | jq -Rs .)
+
+          jq -n \
+          --arg system "You are a senior software architect reviewing a pull request. Focus on maintainability, architecture, code quality, testing, and improvements." \
+          --arg user "Review this pull request diff:\n$DIFF_CONTENT" \
+          '{
+              model: "gpt-4o-mini",
+              messages: [
+                {role: "system", content: $system},
+                {role: "user", content: $user}
+              ],
+              temperature: 0.2
+            }' > payload.json
+  
+          curl https://api.openai.com/v1/chat/completions \
+          -s \
+          -H "Content-Type: application/json" \
+          -H "Authorization: Bearer $OPENAI_API_KEY" \
+          -d @payload.json \
+          > review.json
+  
+          cat review.json
+
+      - name: Post PR review comment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          COMMENT=$(jq -r '.choices[0].message.content // .error.message // "AI review failed"' review.json)
+
+          gh pr comment ${{ github.event.pull_request.number }} \
+            --body "$COMMENT"
