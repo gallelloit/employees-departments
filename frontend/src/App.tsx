@@ -1,25 +1,10 @@
-import { useEffect, useState } from "react";
-import { fetchEmployees } from "./services/api";
+import EmployeesPage from "./pages/EmployeesPage";
 
 function App() {
-    const [employees, setEmployees] = useState<any[]>([]);
-
-    useEffect(() => {
-        fetchEmployees()
-            .then(setEmployees)
-            .catch(console.error);
-    }, []);
-
     return (
         <div>
             <h1>Employees Dashboard</h1>
-            <ul>
-                {employees.map((employee) => (
-                    <li key={employee.id}>
-                        {employee.name} - {employee.email}
-                    </li>
-                ))}
-            </ul>
+            <EmployeesPage />
         </div>
     );
 }
