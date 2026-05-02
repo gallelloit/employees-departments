@@ -50,12 +50,13 @@ jobs:
               ],
               \"temperature\": 0.2
             }" > review.json
+          cat review.json
 
       - name: Post PR review comment
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          COMMENT=$(jq -r '.choices[0].message.content' review.json)
+          COMMENT=$(jq -r '.choices[0].message.content // .error.message // "AI review failed"' review.json)
 
           gh pr comment ${{ github.event.pull_request.number }} \
             --body "$COMMENT"
