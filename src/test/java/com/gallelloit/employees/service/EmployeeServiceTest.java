@@ -2,6 +2,7 @@ package com.gallelloit.employees.service;
 
 import com.gallelloit.employees.dto.EmployeeCreateRequest;
 import com.gallelloit.employees.dto.EmployeeDTO;
+import com.gallelloit.employees.dto.EmployeeUpdateRequest;
 import com.gallelloit.employees.entity.Department;
 import com.gallelloit.employees.entity.Employee;
 import com.gallelloit.employees.repository.DepartmentRepository;
@@ -125,15 +126,15 @@ class EmployeeServiceTest {
 
     @Test
     void updateEmployee_shouldUpdateEmployeeWhenFound() {
-        Employee updatedEmployee = Employee.builder()
-                .name("John Updated")
-                .email("john.updated@example.com")
-                .build();
+        EmployeeUpdateRequest updateRequest = new EmployeeUpdateRequest(
+                "John Updated",
+                "john.updated@example.com"
+        );
 
         when(employeeRepository.findById(1L)).thenReturn(Optional.of(testEmployee));
         when(employeeRepository.save(any(Employee.class))).thenReturn(testEmployee);
 
-        Employee result = employeeService.updateEmployee(1L, updatedEmployee);
+        EmployeeDTO result = employeeService.updateEmployee(1L, updateRequest);
 
         assertNotNull(result);
         assertEquals("John Updated", testEmployee.getName());
@@ -145,15 +146,15 @@ class EmployeeServiceTest {
 
     @Test
     void updateEmployee_shouldThrowExceptionWhenEmployeeNotFound() {
-        Employee updatedEmployee = Employee.builder()
-                .name("John Updated")
-                .email("john.updated@example.com")
-                .build();
+        EmployeeUpdateRequest updateRequest = new EmployeeUpdateRequest(
+                "John Updated",
+                "john.updated@example.com"
+        );
 
         when(employeeRepository.findById(999L)).thenReturn(Optional.empty());
 
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            employeeService.updateEmployee(999L, updatedEmployee);
+            employeeService.updateEmployee(999L, updateRequest);
         });
 
         assertEquals("Employee not found", exception.getMessage());

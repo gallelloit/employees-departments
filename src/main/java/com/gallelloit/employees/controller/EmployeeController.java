@@ -2,7 +2,7 @@ package com.gallelloit.employees.controller;
 
 import com.gallelloit.employees.dto.EmployeeCreateRequest;
 import com.gallelloit.employees.dto.EmployeeDTO;
-import com.gallelloit.employees.entity.Employee;
+import com.gallelloit.employees.dto.EmployeeUpdateRequest;
 import com.gallelloit.employees.service.EmployeeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -28,8 +28,8 @@ public class EmployeeController {
     }
 
     @PutMapping("/{id}")
-    public Employee updateEmployee(@PathVariable Long id, @RequestBody Employee updatedEmployee) {
-        return service.updateEmployee(id, updatedEmployee);
+    public ResponseEntity<EmployeeDTO> updateEmployee(@PathVariable Long id, @RequestBody EmployeeUpdateRequest updateRequest) {
+        return ResponseEntity.ok(service.updateEmployee(id, updateRequest));
     }
 
     @DeleteMapping("/{id}")
