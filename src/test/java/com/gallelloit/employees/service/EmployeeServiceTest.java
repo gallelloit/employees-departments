@@ -122,4 +122,62 @@ class EmployeeServiceTest {
         verify(departmentRepository, times(1)).findById(999L);
         verify(employeeRepository, never()).save(any(Employee.class));
     }
+
+    @Test
+    void updateEmployee_shouldUpdateEmployeeWhenFound() {
+        Employee updatedEmployee = Employee.builder()
+                .name("John Updated")
+                .email("john.updated@example.com")
+                .build();
+
+        when(employeeRepository.findById(1L)).thenReturn(Optional.of(testEmployee));
+        when(employeeRepository.save(any(Employee.class))).thenReturn(testEmployee);
+
+        Employee result = employeeService.updateEmployee(1L, updatedEmployee);
+
+        assertNotNull(result);
+        assertEquals("John Updated", testEmployee.getName());
+        assertEquals("john.updated@example.com", testEmployee.getEmail());
+
+        verify(employeeRepository, times(1)).findById(1L);
+        verify(employeeRepository, times(1)).save(testEmployee);
+    }
+
+    @Test
+    void updateEmployee_shouldThrowExceptionWhenEmployeeNotFound() {
+        Employee updatedEmployee = Employee.builder()
+                .name("John Updated")
+                .email("john.updated@example.com")
+                .build();
+
+        when(employeeRepository.findById(999L)).thenReturn(Optional.empty());
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            employeeService.updateEmployee(999L, updatedEmployee);
+        });
+
+        assertEquals("Employee not found", exception.getMessage());
+        verify(employeeRepository, times(1)).findById(999L);
+        verify(employeeRepository, never()).save(any(Employee.class));
+    }
+
+    @Test
+    void deleteEmployee_shouldDeleteEmployeeWhenExists() {
+        doNothing().when(employeeRepository).deleteById(1L);
+
+        employeeService.deleteEmployee(1L);
+
+        verify(employeeRepository, times(1)).deleteById(1L);
+    }
+
+    @Test
+    void deleteEmployee_shouldHandleNonExistentEmployee() {
+        doThrow(new RuntimeException("Employee not found")).when(employeeRepository).deleteById(999L);
+
+        assertThrows(RuntimeException.class, () -> {
+            employeeService.deleteEmployee(999L);
+        });
+
+        verify(employeeRepository, times(1)).deleteById(999L);
+    }
 }
