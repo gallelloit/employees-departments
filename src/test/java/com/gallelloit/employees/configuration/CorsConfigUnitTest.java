@@ -1,7 +1,6 @@
 package com.gallelloit.employees.configuration;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -9,17 +8,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 class CorsConfigUnitTest {
 
     @Test
-    void shouldExecuteCorsConfiguration() {
+    void shouldCreateCorsConfigurerBean() {
         CorsConfig corsConfig = new CorsConfig();
 
         WebMvcConfigurer configurer = corsConfig.corsConfigurer();
 
         assertThat(configurer).isNotNull();
 
-        CorsRegistry registry = new CorsRegistry();
+        // Fuerza llamada real al método sobrescrito
+        configurer.addCorsMappings(new org.springframework.web.servlet.config.annotation.CorsRegistry());
 
-        configurer.addCorsMappings(registry);
-
-        assertThat(registry).isNotNull();
+        assertThat(configurer).isInstanceOf(WebMvcConfigurer.class);
     }
 }
