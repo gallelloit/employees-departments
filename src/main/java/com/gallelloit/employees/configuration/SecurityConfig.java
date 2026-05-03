@@ -9,6 +9,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -64,21 +66,21 @@ public class SecurityConfig {
     /**
      * Configures CSRF protection for the application.
      * 
-     * CSRF protection is disabled for stateless API endpoints because:
-     * 1. JWT authentication uses bearer tokens, not session cookies
-     * 2. No session exists that could be hijacked via CSRF attacks
-     * 3. Security is provided by valid JWT tokens in Authorization header
-     * 4. This follows OWASP recommendations for stateless APIs
+     * CSRF protection is enabled and configured to work with JWT authentication.
+     * For stateless APIs, CSRF tokens are stored in cookies and validated against
+     * request headers, providing protection without requiring session state.
      * 
      * @param csrf the CSRF configuration to customize
      * @throws Exception if configuration fails
      */
     private void configureCsrf(CsrfConfigurer<HttpSecurity> csrf) throws Exception {
-        // Ignore CSRF for stateless API endpoints that use JWT authentication
-        csrf.ignoringRequestMatchers("/employees/**", "/departments/**", "/actuator/health");
+        // Enable CSRF protection with cookie-based tokens for stateless JWT APIs
+        csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse());
         
-        // Disable CSRF entirely since we're using stateless JWT authentication
-        // This is safe and recommended for bearer token authentication
-        csrf.disable();
+        // Configure CSRF token request handler to work with frontend
+        CsrfTokenRequestAttributeHandler requestHandler = 
+            new CsrfTokenRequestAttributeHandler();
+        requestHandler.setCsrfRequestAttributeName("_csrf");
+        csrf.csrfTokenRequestHandler(requestHandler);
     }
 }
