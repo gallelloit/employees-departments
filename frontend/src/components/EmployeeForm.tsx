@@ -1,26 +1,55 @@
-import { useState } from "react";
-import { createEmployee } from "../services/api";
+import {useEffect, useState} from "react";
+import {createEmployee, updateEmployee} from "../services/api";
 import type { Department } from "../types/Department";
+import type {Employee} from "../types/Employee.ts";
 
 interface Props {
     departments: Department[];
     onEmployeeCreated: () => void;
+    editingEmployee?: Employee | null;
+    clearEditing?: () => void;
 }
 
-function EmployeeForm({ departments, onEmployeeCreated }: Props) {
+function EmployeeForm({
+                          departments,
+                          onEmployeeCreated,
+                          editingEmployee,
+                          clearEditing,
+                      }: Props) {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [departmentId, setDepartmentId] = useState<number>(
         departments[0]?.id || 0
     );
 
+    useEffect(() => {
+        if (editingEmployee) {
+            setName(editingEmployee.name);
+            setEmail(editingEmployee.email);
+            setDepartmentId(editingEmployee.department?.id || 0);
+        }
+    }, [editingEmployee]);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         try {
-            await createEmployee(name, email, departmentId);
+            if (editingEmployee) {
+                await updateEmployee(editingEmployee.id, {
+                    name,
+                    email,
+                    departmentId,
+                });
+
+                clearEditing?.();
+            } else {
+                await createEmployee(name, email, departmentId);
+            }
+
             setName("");
             setEmail("");
+            setDepartmentId(departments[0]?.id || 0);
+
             onEmployeeCreated();
         } catch (error) {
             console.error(error);
@@ -56,7 +85,21 @@ function EmployeeForm({ departments, onEmployeeCreated }: Props) {
                 ))}
             </select>
 
-            <button type="submit">Add Employee</button>
+            <button type="submit">{editingEmployee ? "Update Employee" : "Add Employee"}</button>
+            {editingEmployee && (
+                <button
+                    type="button"
+                    onClick={() => {
+                        clearEditing?.();
+                        setName("");
+                        setEmail("");
+                        setDepartmentId(departments[0]?.id || 0);
+                    }}
+                    style={{ marginLeft: "10px" }}
+                >
+                    Cancel
+                </button>
+            )}
         </form>
     );
 }

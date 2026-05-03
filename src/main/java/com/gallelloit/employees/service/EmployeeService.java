@@ -37,4 +37,18 @@ public class EmployeeService {
 
         return EmployeeMapper.toDTO(employeeRepository.save(employee));
     }
+
+    public Employee updateEmployee(final Long id, final Employee updatedEmployee) {
+        final Employee employee = employeeRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
+
+        employee.setName(updatedEmployee.getName());
+        employee.setEmail(updatedEmployee.getEmail());
+
+        return employeeRepository.save(employee);
+    }
+
+    public void deleteEmployee(final Long id) {
+        employeeRepository.deleteById(id);
+    }
 }
