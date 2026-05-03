@@ -11,7 +11,7 @@ function DepartmentForm({ onDepartmentCreated }: Props) {
         e.preventDefault();
 
         try {
-            const { createDepartment } = await import("../services/api");
+            const { createDepartment } = await import("../services/departmentService");
             await createDepartment(name);
             setName("");
             onDepartmentCreated();

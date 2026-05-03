@@ -7,7 +7,11 @@ spring:
     hikari:
       connection-timeout: 20000
       initialization-fail-timeout: 60000
-
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://cognito-idp.eu-west-3.amazonaws.com/eu-west-3_4lLvzWqVE
   jpa:
     properties:
       dialect: org.hibernate.dialect.PostgreSQLDialect
@@ -21,5 +25,5 @@ spring:
 
 logging:
   level:
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.hibernate.SQL: INFO
+    org.hibernate.type.descriptor.sql.BasicBinder: INFO

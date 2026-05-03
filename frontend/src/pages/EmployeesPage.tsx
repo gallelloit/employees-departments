@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { fetchEmployees, deleteEmployee } from "../services/api";
+import { fetchEmployees, deleteEmployee } from "../services/employeeService";
 import type { Employee } from "../types/Employee";
-import { fetchDepartments } from "../services/api";
+import { fetchDepartments } from "../services/departmentService";
 import type { Department } from "../types/Department";
 import EmployeeForm from "../components/EmployeeForm";
 
