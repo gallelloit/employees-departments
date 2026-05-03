@@ -1,5 +1,5 @@
 import {useEffect, useState} from "react";
-import {createEmployee, updateEmployee} from "../services/api";
+import {createEmployee, updateEmployee} from "../services/employeeService";
 import type { Department } from "../types/Department";
 import type {Employee} from "../types/Employee.ts";
 

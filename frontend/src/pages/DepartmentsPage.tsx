@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchDepartments } from "../services/api";
+import { fetchDepartments } from "../services/departmentService";
 import type { Department } from "../types/Department";
 import DepartmentForm from "../components/DepartmentForm";
 
