@@ -1,26 +1,20 @@
-import { useEffect, useState } from "react";
-import { fetchEmployees } from "./services/api";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import Navbar from "./components/Navbar";
+import EmployeesPage from "./pages/EmployeesPage";
+import DepartmentsPage from "./pages/DepartmentsPage";
 
 function App() {
-    const [employees, setEmployees] = useState<any[]>([]);
-
-    useEffect(() => {
-        fetchEmployees()
-            .then(setEmployees)
-            .catch(console.error);
-    }, []);
-
     return (
-        <div>
-            <h1>Employees Dashboard</h1>
-            <ul>
-                {employees.map((employee) => (
-                    <li key={employee.id}>
-                        {employee.name} - {employee.email}
-                    </li>
-                ))}
-            </ul>
-        </div>
+        <BrowserRouter>
+            <Navbar />
+            <main>
+                <Routes>
+                    <Route path="/" element={<Navigate to="/employees" replace />} />
+                    <Route path="/employees" element={<EmployeesPage />} />
+                    <Route path="/departments" element={<DepartmentsPage />} />
+                </Routes>
+            </main>
+        </BrowserRouter>
     );
 }
 
