@@ -1,12 +1,14 @@
 package com.gallelloit.employees.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.gallelloit.employees.configuration.TestSecurityConfig;
 import com.gallelloit.employees.dto.DepartmentDTO;
 import com.gallelloit.employees.entity.Department;
 import com.gallelloit.employees.service.DepartmentService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -20,6 +22,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(DepartmentController.class)
+@Import(TestSecurityConfig.class)
 class DepartmentControllerTest {
 
     @Autowired
