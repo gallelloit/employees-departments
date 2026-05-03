@@ -7,6 +7,7 @@ import * as efs from 'aws-cdk-lib/aws-efs';
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
+import * as ssm from 'aws-cdk-lib/aws-ssm';
 
 export class InfraStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props?: cdk.StackProps) {

@@ -6,9 +6,9 @@ const LoginPage = () => {
     const { login } = useAuth();
     const navigate = useNavigate();
 
-    const cognitoDomain = "https://employees-auth-442607.auth.eu-west-3.amazoncognito.com";
-    const clientId = "5lubs6v6aqdnlb85pc6o02dudd";
-    const redirectUri = "http://localhost:5173/login";
+    const cognitoDomain = import.meta.env.VITE_COGNITO_DOMAIN;
+    const clientId = import.meta.env.VITE_COGNITO_CLIENT_ID;
+    const redirectUri = import.meta.env.VITE_COGNITO_REDIRECT_URI;
 
     const loginUrl =
         `${cognitoDomain}/login?` +
@@ -43,7 +43,7 @@ const LoginPage = () => {
                 const data = await response.json();
 
                 if (data.access_token) {
-                    login(data.access_token);
+                    login(data.id_token);
                     navigate("/employees");
                 } else {
                     console.error("Token exchange failed", data);

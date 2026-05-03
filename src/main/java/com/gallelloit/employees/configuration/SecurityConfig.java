@@ -6,10 +6,10 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -25,20 +25,14 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> {
-                    try {
-                        configureCsrf(csrf);
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                })
+                .csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/health").permitAll()
-                        .requestMatchers("/api/**").authenticated()
+                        .requestMatchers("/employees/**", "/departments/**").authenticated()
                         .anyRequest().permitAll()
                 )
                 .oauth2ResourceServer(oauth2 ->
@@ -61,27 +55,5 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
 
         return source;
-    }
-
-    /**
-     * Configures CSRF protection for the application.
-     * 
-     * CSRF protection is enabled and configured to work with JWT authentication.
-     * For stateless APIs, CSRF tokens are stored in cookies and validated against
-     * request headers, providing protection without requiring session state.
-     * 
-     * @param csrf the CSRF configuration to customize
-     * @throws Exception if configuration fails
-     */
-    private void configureCsrf(CsrfConfigurer<HttpSecurity> csrf) throws Exception {
-        // Enable CSRF protection with secure HttpOnly cookie-based tokens
-        // Tokens are stored in HttpOnly cookies but made available via request attributes
-        csrf.csrfTokenRepository(new SecureCsrfTokenRepository());
-        
-        // Configure CSRF token request handler to work with frontend
-        CsrfTokenRequestAttributeHandler requestHandler = 
-            new CsrfTokenRequestAttributeHandler();
-        requestHandler.setCsrfRequestAttributeName("_csrf");
-        csrf.csrfTokenRequestHandler(requestHandler);
     }
 }
