@@ -2,6 +2,7 @@ package com.gallelloit.employees.service;
 
 import com.gallelloit.employees.dto.EmployeeCreateRequest;
 import com.gallelloit.employees.dto.EmployeeDTO;
+import com.gallelloit.employees.dto.EmployeeUpdateRequest;
 import com.gallelloit.employees.entity.Department;
 import com.gallelloit.employees.entity.Employee;
 import com.gallelloit.employees.mapper.EmployeeMapper;
@@ -36,5 +37,19 @@ public class EmployeeService {
                 .build();
 
         return EmployeeMapper.toDTO(employeeRepository.save(employee));
+    }
+
+    public EmployeeDTO updateEmployee(final Long id, final EmployeeUpdateRequest updateRequest) {
+        final Employee employee = employeeRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
+
+        employee.setName(updateRequest.name());
+        employee.setEmail(updateRequest.email());
+
+        return EmployeeMapper.toDTO(employeeRepository.save(employee));
+    }
+
+    public void deleteEmployee(final Long id) {
+        employeeRepository.deleteById(id);
     }
 }

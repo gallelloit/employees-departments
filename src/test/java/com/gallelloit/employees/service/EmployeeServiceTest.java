@@ -2,6 +2,7 @@ package com.gallelloit.employees.service;
 
 import com.gallelloit.employees.dto.EmployeeCreateRequest;
 import com.gallelloit.employees.dto.EmployeeDTO;
+import com.gallelloit.employees.dto.EmployeeUpdateRequest;
 import com.gallelloit.employees.entity.Department;
 import com.gallelloit.employees.entity.Employee;
 import com.gallelloit.employees.repository.DepartmentRepository;
@@ -121,5 +122,63 @@ class EmployeeServiceTest {
         assertEquals("Department not found", exception.getMessage());
         verify(departmentRepository, times(1)).findById(999L);
         verify(employeeRepository, never()).save(any(Employee.class));
+    }
+
+    @Test
+    void updateEmployee_shouldUpdateEmployeeWhenFound() {
+        EmployeeUpdateRequest updateRequest = new EmployeeUpdateRequest(
+                "John Updated",
+                "john.updated@example.com"
+        );
+
+        when(employeeRepository.findById(1L)).thenReturn(Optional.of(testEmployee));
+        when(employeeRepository.save(any(Employee.class))).thenReturn(testEmployee);
+
+        EmployeeDTO result = employeeService.updateEmployee(1L, updateRequest);
+
+        assertNotNull(result);
+        assertEquals("John Updated", testEmployee.getName());
+        assertEquals("john.updated@example.com", testEmployee.getEmail());
+
+        verify(employeeRepository, times(1)).findById(1L);
+        verify(employeeRepository, times(1)).save(testEmployee);
+    }
+
+    @Test
+    void updateEmployee_shouldThrowExceptionWhenEmployeeNotFound() {
+        EmployeeUpdateRequest updateRequest = new EmployeeUpdateRequest(
+                "John Updated",
+                "john.updated@example.com"
+        );
+
+        when(employeeRepository.findById(999L)).thenReturn(Optional.empty());
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            employeeService.updateEmployee(999L, updateRequest);
+        });
+
+        assertEquals("Employee not found", exception.getMessage());
+        verify(employeeRepository, times(1)).findById(999L);
+        verify(employeeRepository, never()).save(any(Employee.class));
+    }
+
+    @Test
+    void deleteEmployee_shouldDeleteEmployeeWhenExists() {
+        doNothing().when(employeeRepository).deleteById(1L);
+
+        employeeService.deleteEmployee(1L);
+
+        verify(employeeRepository, times(1)).deleteById(1L);
+    }
+
+    @Test
+    void deleteEmployee_shouldHandleNonExistentEmployee() {
+        doThrow(new RuntimeException("Employee not found")).when(employeeRepository).deleteById(999L);
+
+        assertThrows(RuntimeException.class, () -> {
+            employeeService.deleteEmployee(999L);
+        });
+
+        verify(employeeRepository, times(1)).deleteById(999L);
     }
 }

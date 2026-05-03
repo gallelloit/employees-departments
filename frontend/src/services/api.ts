@@ -55,5 +55,40 @@ export async function createEmployee(
         throw new Error("Failed to create employee");
     }
 
-    return response.json();
+    return response;
+}
+
+export async function updateEmployee(
+    id: number,
+    employeeData: {
+        name: string;
+        email: string;
+        departmentId: number;
+    }
+) {
+    const response = await fetch(`${API_BASE_URL}/employees/${id}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(employeeData),
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to update employee");
+    }
+
+    return response;
+}
+
+export async function deleteEmployee(id: number) {
+    const response = await fetch(`${API_BASE_URL}/employees/${id}`, {
+        method: "DELETE",
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to delete employee");
+    }
+
+    return response;
 }
