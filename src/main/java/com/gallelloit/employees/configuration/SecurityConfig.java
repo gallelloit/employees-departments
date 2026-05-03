@@ -74,8 +74,9 @@ public class SecurityConfig {
      * @throws Exception if configuration fails
      */
     private void configureCsrf(CsrfConfigurer<HttpSecurity> csrf) throws Exception {
-        // Enable CSRF protection with cookie-based tokens for stateless JWT APIs
-        csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse());
+        // Enable CSRF protection with secure HttpOnly cookie-based tokens
+        // Tokens are stored in HttpOnly cookies but made available via request attributes
+        csrf.csrfTokenRepository(new SecureCsrfTokenRepository());
         
         // Configure CSRF token request handler to work with frontend
         CsrfTokenRequestAttributeHandler requestHandler = 
